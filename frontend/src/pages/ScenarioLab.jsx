@@ -23,7 +23,11 @@ export default function ScenarioLab() {
 
   const mut = useMutation({
     mutationFn: createScenario,
-    onSuccess: (data) => { setResult(data); setError(null); qc.invalidateQueries(['scenarios']) },
+    onSuccess: (data) => {
+      setResult(data)
+      setError(null)
+      qc.invalidateQueries({ queryKey: ['scenarios'] })
+    },
     onError: (err) => { setError(err.message); setResult(null) },
   })
 

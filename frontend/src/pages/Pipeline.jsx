@@ -17,7 +17,7 @@ export default function Pipeline() {
   const [srcForm, setSrcForm] = useState({ name: '', source_type: 'csv', data_category: 'solar_generation', description: '', local_file_path: SAMPLE_SOLAR, units: 'kWh', temporal_resolution: 'hourly', geographic_scope: 'Pune, India' })
   const createSrcMut = useMutation({
     mutationFn: createSource,
-    onSuccess: () => { qc.invalidateQueries(['sources']); setMsg({ ok: true, text: 'Source registered.' }) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sources'] }); setMsg({ ok: true, text: 'Source registered.' }) },
     onError: e => setMsg({ ok: false, text: e.message }),
   })
 
@@ -28,7 +28,11 @@ export default function Pipeline() {
   const [ingestForm, setIngestForm] = useState({ source_id: '', file_path: SAMPLE_SOLAR, timestamp_col: 'timestamp', generation_col: 'generation_kwh', ghi_col: 'ghi', temperature_col: 'temperature_c', site_id: 'pune_rooftop_100kwp', unit: 'kWh' })
   const ingestMut = useMutation({
     mutationFn: ingestSolarCSV,
-    onSuccess: d => { qc.invalidateQueries(['pipeline-runs']); qc.invalidateQueries(['overview']); setMsg({ ok: true, text: `Ingested. ${d.rows_written} rows written. Quality: ${d.quality_score}%` }) },
+    onSuccess: d => {
+      qc.invalidateQueries({ queryKey: ['pipeline-runs'] })
+      qc.invalidateQueries({ queryKey: ['overview'] })
+      setMsg({ ok: true, text: `Ingested. ${d.rows_written} rows written. Quality: ${d.quality_score}%` })
+    },
     onError: e => setMsg({ ok: false, text: e.message }),
   })
 
@@ -36,7 +40,10 @@ export default function Pipeline() {
   const [meteoForm, setMeteoForm] = useState({ source_id: '', latitude: 18.52, longitude: 73.86, start_date: '2022-01-01', end_date: '2022-12-31', location_id: 'pune_india' })
   const meteoMut = useMutation({
     mutationFn: ingestOpenMeteo,
-    onSuccess: d => { qc.invalidateQueries(['pipeline-runs']); setMsg({ ok: true, text: `Open-Meteo: ${d.rows_written} rows written.` }) },
+    onSuccess: d => {
+      qc.invalidateQueries({ queryKey: ['pipeline-runs'] })
+      setMsg({ ok: true, text: `Open-Meteo: ${d.rows_written} rows written.` })
+    },
     onError: e => setMsg({ ok: false, text: e.message }),
   })
 

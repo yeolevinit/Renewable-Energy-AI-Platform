@@ -29,9 +29,9 @@ export default function Anomalies() {
     mutationFn: ({ id, status }) => updateAlertStatus(id, { review_status: status }),
     onSuccess: () => {
       setUpdatingId(null)
-      qc.invalidateQueries(['anomalies'])
-      qc.invalidateQueries(['anomaly-summary'])
-      qc.invalidateQueries(['overview'])
+      qc.invalidateQueries({ queryKey: ['anomalies'] })
+      qc.invalidateQueries({ queryKey: ['anomaly-summary'] })
+      qc.invalidateQueries({ queryKey: ['overview'] })
     },
   })
 

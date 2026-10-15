@@ -57,7 +57,7 @@ export default function EnergyBalance() {
       <div className="kpi-grid">
         <KpiCard label="Total Generation (June)" value={`${fmt(totalGen, 0)} kWh`} accent="success" />
         <KpiCard label="Daily Average" value={genSeries.length > 0 ? `${fmt(totalGen / 30, 0)} kWh/day` : '—'} accent="primary" />
-        <KpiCard label="Peak Hour Generation" value={`${fmt(Math.max(...genSeries.map(r => r.generation_kwh || 0)), 3)} kWh`} accent="warning" />
+        <KpiCard label="Peak Hour Generation" value={genSeries.length > 0 ? `${fmt(Math.max(...genSeries.map(r => r.generation_kwh || 0)), 3)} kWh` : '—'} accent="warning" />
         <KpiCard label="Zero-generation Hours" value={fmt(genSeries.filter(r => (r.generation_kwh || 0) < 0.01).length)} />
       </div>
 

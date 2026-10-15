@@ -29,18 +29,19 @@ export default function Models() {
   const trainMut = useMutation({
     mutationFn: (payload) => trainSolarModels(payload),
     onSuccess: (data) => {
-      setTrainMsg({ ok: true, text: `Training complete. ${data.rows_used} rows used. Anomalies detected: ${data.anomalies_detected}.` })
-      qc.invalidateQueries(['evals-summary'])
-      qc.invalidateQueries(['gen-forecasts'])
-      qc.invalidateQueries(['overview'])
+      setTrainMsg({
+        ok: true,
+        text: `Training complete. ${data.rows_used} rows used. Anomalies detected: ${data.anomalies_detected}.`,
+      })
+      // TanStack Query v5: invalidateQueries requires { queryKey } object
+      qc.invalidateQueries({ queryKey: ['evals-summary'] })
+      qc.invalidateQueries({ queryKey: ['gen-forecasts'] })
+      qc.invalidateQueries({ queryKey: ['overview'] })
     },
     onError: (err) => setTrainMsg({ ok: false, text: err.message }),
   })
 
-  // Best model forecast plot
-  const bestTag = evals[0]?.version_tag
-  const bestForecasts = forecasts.filter(f => !bestTag || f.model_version_id != null)
-  const withActual = bestForecasts.filter(f => f.actual_value != null)
+  const withActual = forecasts.filter(f => f.actual_value != null)
 
   const plotData = []
   if (withActual.length > 0) {
@@ -66,7 +67,7 @@ export default function Models() {
       <div className="card" style={{ marginBottom: '1.25rem' }}>
         <div className="section-label">Train Solar Forecasting Models</div>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Trains linear regression, random forest, and XGBoost on the loaded generation data with leakage-safe chronological splits (70/15/15).
+          Trains linear regression, random forest, and XGBoost on loaded generation data with leakage-safe chronological splits (70 / 15 / 15).
         </p>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div>
@@ -79,17 +80,15 @@ export default function Models() {
           <button
             className="btn btn-primary"
             disabled={!sourceId || trainMut.isPending}
-            onClick={() => {
-              setTrainMsg(null)
-              trainMut.mutate({ source_id: Number(sourceId), include_weather: true })
-            }}
+            onClick={() => { setTrainMsg(null); trainMut.mutate({ source_id: Number(sourceId), include_weather: true }) }}
           >
-            {trainMut.isPending ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Training…</> : 'Train models'}
+            {trainMut.isPending
+              ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Training…</>
+              : 'Train models'}
           </button>
         </div>
         {trainMsg && (
-          <div style={{ marginTop: '0.75rem' }}
-            className={trainMsg.ok ? '' : 'error-state'}>
+          <div style={{ marginTop: '0.75rem' }} className={trainMsg.ok ? '' : 'error-state'}>
             {trainMsg.ok
               ? <span style={{ color: 'var(--success)', fontSize: '0.875rem' }}>✓ {trainMsg.text}</span>
               : trainMsg.text}
@@ -100,36 +99,39 @@ export default function Models() {
       {/* Comparison table */}
       <div className="card" style={{ marginBottom: '1.25rem' }}>
         <div className="section-label">Test-Set Comparison (lower MAE = better)</div>
-        {evalsLoading ? <div><span className="spinner" /></div>
-          : evals.length === 0 ? (
-            <div className="empty-state" style={{ padding: '1rem 0' }}>No model evaluations yet. Train models above.</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Model</th><th>MAE (kWh)</th><th>RMSE (kWh)</th><th>R²</th>
-                  <th>Baseline MAE</th><th>vs Baseline</th><th>N samples</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evals.map((e, i) => (
-                  <tr key={i} style={i === 0 ? { background: 'rgba(59,130,246,0.06)' } : {}}>
-                    <td style={{ textTransform: 'capitalize', fontWeight: i === 0 ? 600 : 400 }}>
-                      {i === 0 ? '🏆 ' : ''}{e.model_type?.replace(/_/g, ' ')}
-                    </td>
-                    <td style={{ color: i === 0 ? 'var(--success)' : 'inherit' }}>{fmt(e.mae)}</td>
-                    <td>{fmt(e.rmse)}</td>
-                    <td>{fmt(e.r2)}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>{fmt(e.baseline_mae)}</td>
-                    <td style={{ color: e.mae_vs_baseline_pct > 0 ? 'var(--success)' : 'var(--warning)' }}>
-                      {e.mae_vs_baseline_pct != null ? `${e.mae_vs_baseline_pct > 0 ? '+' : ''}${e.mae_vs_baseline_pct}%` : '—'}
-                    </td>
-                    <td>{e.n_samples?.toLocaleString()}</td>
+        {evalsLoading
+          ? <div><span className="spinner" /></div>
+          : evals.length === 0
+            ? <div className="empty-state" style={{ padding: '1rem 0' }}>No model evaluations yet. Train models above.</div>
+            : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th><th>MAE (kWh)</th><th>RMSE (kWh)</th><th>R²</th>
+                    <th>Baseline MAE</th><th>vs Baseline</th><th>N samples</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {evals.map((e, i) => (
+                    <tr key={i} style={i === 0 ? { background: 'rgba(59,130,246,0.06)' } : {}}>
+                      <td style={{ textTransform: 'capitalize', fontWeight: i === 0 ? 600 : 400 }}>
+                        {i === 0 ? '🏆 ' : ''}{e.model_type?.replace(/_/g, ' ')}
+                      </td>
+                      <td style={{ color: i === 0 ? 'var(--success)' : 'inherit' }}>{fmt(e.mae)}</td>
+                      <td>{fmt(e.rmse)}</td>
+                      <td>{fmt(e.r2)}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{fmt(e.baseline_mae)}</td>
+                      <td style={{ color: (e.mae_vs_baseline_pct ?? 0) > 0 ? 'var(--success)' : 'var(--warning)' }}>
+                        {e.mae_vs_baseline_pct != null
+                          ? `${e.mae_vs_baseline_pct > 0 ? '+' : ''}${e.mae_vs_baseline_pct}%`
+                          : '—'}
+                      </td>
+                      <td>{e.n_samples?.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
       </div>
 
       {/* Feature importances for best model */}
@@ -138,7 +140,9 @@ export default function Models() {
         const sorted = Object.entries(fi).sort((a, b) => b[1] - a[1]).slice(0, 15)
         return (
           <div className="card" style={{ marginBottom: '1.25rem' }}>
-            <div className="section-label">Top Feature Importances — {evals[0].model_type?.replace(/_/g, ' ')}</div>
+            <div className="section-label">
+              Top Feature Importances — {evals[0].model_type?.replace(/_/g, ' ')}
+            </div>
             <PlotWrapper
               data={[{
                 type: 'bar', orientation: 'h',
@@ -146,21 +150,21 @@ export default function Models() {
                 y: sorted.map(([k]) => k),
                 marker: { color: '#3b82f6' },
               }]}
-              layout={{ yaxis: { autorange: 'reversed' }, margin: { l: 170, r: 20, t: 10, b: 40 } }}
-              style={{ minHeight: 320 }}
+              layout={{ yaxis: { autorange: 'reversed' }, margin: { l: 200, r: 20, t: 10, b: 40 } }}
+              style={{ minHeight: 340 }}
             />
           </div>
         )
       })()}
 
-      {/* Actual vs predicted plot */}
+      {/* Actual vs predicted */}
       <PlotWrapper
         data={plotData}
         isLoading={false}
         isEmpty={plotData.length === 0}
-        emptyMessage="No test-period forecasts stored yet."
+        emptyMessage="No test-period forecasts stored yet. Train a model to see results."
         layout={{
-          title: { text: 'Actual vs Predicted (Test Period)', font: { color: '#e2e8f0' } },
+          title: { text: 'Actual vs Predicted — Test Period', font: { color: '#e2e8f0' } },
           xaxis: { title: 'Date / Time (UTC)' },
           yaxis: { title: 'Generation (kWh)' },
         }}
@@ -168,7 +172,8 @@ export default function Models() {
       />
 
       <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        All metrics are from the chronological held-out test set (last 15% of data by time). Comparison with seasonal-naïve baseline. Positive "vs Baseline" = MAE improvement over baseline.
+        All metrics are from the chronological held-out test set (last 15% of data by time).
+        Compared against a seasonal-naïve baseline. Positive "vs Baseline" = MAE improvement.
       </p>
     </div>
   )

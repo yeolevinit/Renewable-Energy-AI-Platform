@@ -7,18 +7,22 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },
   },
   build: {
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 3000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          plotly: ['plotly.js', 'react-plotly.js'],
-          vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+        manualChunks(id) {
+          if (id.includes('plotly.js') || id.includes('react-plotly')) {
+            return 'plotly'
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
         },
       },
     },

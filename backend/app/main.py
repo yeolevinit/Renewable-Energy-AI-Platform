@@ -34,6 +34,12 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown hooks."""
+    # Auto-create tables for SQLite (dev mode) — Alembic handles PostgreSQL
+    if settings.database_url.startswith("sqlite"):
+        from app.db.database import create_all_tables
+        create_all_tables()
+        logger.info("sqlite_tables_created")
+
     logger.info(
         "app_startup",
         name=settings.app_name,

@@ -53,7 +53,7 @@ class ForecastPoint(BaseModel):
 
 
 class ModelEvaluationResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
     id: int
     model_version_id: int
     split_name: str
@@ -71,7 +71,7 @@ class ModelEvaluationResponse(BaseModel):
 
 
 class ModelVersionResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
     id: int
     task: str
     model_type: str

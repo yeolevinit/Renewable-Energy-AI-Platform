@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ML artifacts
+backend/app/ml/artifacts/*.pkl
+backend/app/ml/artifacts/*.joblib
+backend/app/ml/artifacts/*.json
+!backend/app/ml/artifacts/.gitkeep
+
+# Data (raw data stays local; samples are committed)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/samples/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
